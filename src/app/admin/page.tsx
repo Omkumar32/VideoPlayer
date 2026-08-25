@@ -262,12 +262,17 @@ export default function AdminPage() {
       });
 
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && data.video) {
         setNewTitle('');
         setNewDesc('');
         setUploadFile(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
-        setUploadSuccessMsg(`Video "${data.video.title}" uploaded and stored in public/videos!`);
+        setUploadSuccessMsg(`Video "${data.video.title}" uploaded and saved successfully!`);
+        
+        // Instantly add newly uploaded video to local state list
+        setVideos((prevVideos) => [data.video, ...prevVideos]);
+        
+        // Re-fetch data from server
         fetchData();
       } else {
         alert(data.error || 'Failed to upload video');
