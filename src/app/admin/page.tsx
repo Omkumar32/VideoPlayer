@@ -262,12 +262,15 @@ export default function AdminPage() {
                 <select
                   value={selectedVideoId}
                   onChange={(e) => setSelectedVideoId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
                 >
+                  <option value="" disabled className="bg-slate-900 text-slate-400">
+                    -- Select Confidential Video --
+                  </option>
                   {videos.map((v: any) => {
                     const val = v.id || v._id?.toString();
                     return (
-                      <option key={val} value={val}>
+                      <option key={val} value={val} className="bg-slate-900 text-white">
                         {v.title}
                       </option>
                     );
