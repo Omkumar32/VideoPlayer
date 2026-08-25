@@ -216,6 +216,7 @@ export default function AdminPage() {
       const data = await res.json();
       if (!res.ok) {
         setFormError(data.error || 'Failed to generate link.');
+        alert(data.error || 'Failed to generate link.');
         return;
       }
 
@@ -230,7 +231,9 @@ export default function AdminPage() {
       setUserEmailInput('');
       fetchData();
     } catch (err: any) {
-      setFormError('Error generating secure link.');
+      console.error('Error generating link:', err);
+      setFormError(`Error generating secure link: ${err.message || err}`);
+      alert(`Error generating link: ${err.message || err}`);
     }
   };
 
@@ -457,10 +460,10 @@ export default function AdminPage() {
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
               >
-                <Lock className="w-3.5 h-3.5" />
-                <span>Generate {selectedVideoIds.length > 1 ? `${selectedVideoIds.length} Links` : 'Secure Access Link'}</span>
+                <LinkIcon className="w-3.5 h-3.5" />
+                <span>Generate & Send {selectedVideoIds.length > 1 ? `${selectedVideoIds.length} Links` : 'Secure Access Link'}</span>
               </button>
             </form>
 
