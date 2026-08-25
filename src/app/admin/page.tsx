@@ -87,7 +87,8 @@ export default function AdminPage() {
       if (vData.videos) {
         setVideos(vData.videos);
         if (vData.videos.length > 0 && !selectedVideoId) {
-          setSelectedVideoId(vData.videos[0].id);
+          const first = vData.videos[0];
+          setSelectedVideoId(first.id || first._id?.toString() || '');
         }
       }
       if (aData.records) setAccessRecords(aData.records);
@@ -261,11 +262,14 @@ export default function AdminPage() {
                   onChange={(e) => setSelectedVideoId(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-indigo-500"
                 >
-                  {videos.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.title}
-                    </option>
-                  ))}
+                  {videos.map((v: any) => {
+                    const val = v.id || v._id?.toString();
+                    return (
+                      <option key={val} value={val}>
+                        {v.title}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
