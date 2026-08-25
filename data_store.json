@@ -119,6 +119,39 @@
   ],
   "accessLogs": [
     {
+      "id": "log_1787650064120",
+      "accessRecordId": "6a8d526e2bce4b180999c9bc",
+      "videoId": "6a8d4ece2bce4b180999c956",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "DEVICE_RESET_BY_ADMIN",
+      "ipAddress": "CMS Admin Panel",
+      "userAgent": "Admin Console",
+      "details": "Admin reset registered device binding. User can re-verify on a new device.",
+      "timestamp": "2026-08-25T09:27:44.120Z"
+    },
+    {
+      "id": "log_1787650063778",
+      "accessRecordId": "6a8d4ee52bce4b180999c95e",
+      "videoId": "6a8d4ece2bce4b180999c956",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "DEVICE_RESET_BY_ADMIN",
+      "ipAddress": "CMS Admin Panel",
+      "userAgent": "Admin Console",
+      "details": "Admin reset registered device binding. User can re-verify on a new device.",
+      "timestamp": "2026-08-25T09:27:43.778Z"
+    },
+    {
+      "id": "log_1787650062758",
+      "accessRecordId": "6a8d4ee52bce4b180999c95e",
+      "videoId": "6a8d4ece2bce4b180999c956",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "DEVICE_RESET_BY_ADMIN",
+      "ipAddress": "CMS Admin Panel",
+      "userAgent": "Admin Console",
+      "details": "Admin reset registered device binding. User can re-verify on a new device.",
+      "timestamp": "2026-08-25T09:27:42.758Z"
+    },
+    {
       "id": "log_1787646743821",
       "accessRecordId": "acc_1787646743746_w4kq1",
       "videoId": "6a8d4ece2bce4b180999c956",

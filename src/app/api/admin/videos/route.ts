@@ -36,12 +36,21 @@ export async function POST(req: NextRequest) {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const filename = `${Date.now()}_${safeName}`;
       
-      const videosDir = path.join(process.cwd(), 'public', 'videos');
-      if (!fs.existsSync(videosDir)) {
-        fs.mkdirSync(videosDir, { recursive: true });
+      // Determine writable directory (/tmp/videos for Vercel Serverless, public/videos for local)
+      let targetDir = path.join(process.cwd(), 'public', 'videos');
+      try {
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
+      } catch (err) {
+        // Fallback to writable /tmp on serverless environments like Vercel
+        targetDir = path.join('/tmp', 'videos');
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
       }
 
-      const filePath = path.join(videosDir, filename);
+      const filePath = path.join(targetDir, filename);
       await writeFile(filePath, buffer);
       finalStorageKey = filename;
 

@@ -49,7 +49,11 @@ export async function GET(
       return new NextResponse('Video File Not Found', { status: 404 });
     }
 
-    const filePath = path.join(process.cwd(), 'public', 'videos', video.storageKey);
+    // Check primary public/videos location first, then fallback to writable /tmp/videos for Vercel Serverless
+    let filePath = path.join(process.cwd(), 'public', 'videos', video.storageKey);
+    if (!fs.existsSync(filePath)) {
+      filePath = path.join('/tmp', 'videos', video.storageKey);
+    }
 
     if (!fs.existsSync(filePath)) {
       return new NextResponse('Video stream file missing on server', { status: 404 });
