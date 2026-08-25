@@ -100,38 +100,49 @@ class Store {
 
   // Dual MongoDB + Local Sync Methods
   public async getVideos() {
+    const defaultSeedVideos = [
+      {
+        title: 'Tridiagonal Enterprise Platform Product Demo',
+        storageKey: 'sample_product_training.mp4',
+        description: 'Confidential product feature walkthrough and architectural overview for enterprise clients.',
+        duration: '02:45',
+        fileSize: '14.2 MB',
+        createdBy: 'admin@tridiagonal.com',
+      },
+      {
+        title: 'Q3 Executive Strategy & Financial Briefing',
+        storageKey: 'executive_briefing.mp4',
+        description: 'Strictly confidential roadmap and financial targets for authorized stakeholders only.',
+        duration: '04:12',
+        fileSize: '22.8 MB',
+        createdBy: 'admin@tridiagonal.com',
+      }
+    ];
+
     try {
       await connectToDatabase();
-      const docs = await VideoModel.find({}).sort({ createdAt: -1 }).lean();
-      if (docs.length > 0) return docs.map(d => ({ ...d, id: (d as any)._id.toString() }));
+      let docs = await VideoModel.find({}).sort({ createdAt: -1 }).lean();
+      
+      // Auto seed MongoDB Atlas if empty
+      if (docs.length === 0) {
+        await VideoModel.insertMany(defaultSeedVideos);
+        docs = await VideoModel.find({}).sort({ createdAt: -1 }).lean();
+      }
+
+      if (docs.length > 0) {
+        return docs.map((d: any) => ({ ...d, id: d._id.toString() }));
+      }
     } catch (e) {
       console.warn('MongoDB query fallback to local store:', (e as any).message);
     }
+
     const local = this.getFileStore();
     if (local.videos.length === 0) {
-      // Seed default videos
-      return [
-        {
-          id: 'vid_demo_01',
-          title: 'Tridiagonal Enterprise Platform Product Demo',
-          storageKey: 'sample_product_training.mp4',
-          description: 'Confidential product feature walkthrough and architectural overview for enterprise clients.',
-          duration: '02:45',
-          fileSize: '14.2 MB',
-          createdBy: 'admin@tridiagonal.com',
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 'vid_demo_02',
-          title: 'Q3 Executive Strategy & Financial Briefing',
-          storageKey: 'executive_briefing.mp4',
-          description: 'Strictly confidential roadmap and financial targets for authorized stakeholders only.',
-          duration: '04:12',
-          fileSize: '22.8 MB',
-          createdBy: 'admin@tridiagonal.com',
-          createdAt: new Date().toISOString(),
-        }
-      ];
+      return defaultSeedVideos.map((v, i) => ({
+        ...v,
+        id: `vid_demo_0${i + 1}`,
+        createdAt: new Date().toISOString(),
+      }));
     }
     return local.videos;
   }
