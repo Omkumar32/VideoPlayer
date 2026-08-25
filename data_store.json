@@ -1,0 +1,118 @@
+{
+  "videos": [
+    {
+      "id": "vid_demo_01",
+      "title": "Tridiagonal Enterprise Platform Product Demo",
+      "storageKey": "sample_product_training.mp4",
+      "description": "Confidential product feature walkthrough and architectural overview for enterprise clients.",
+      "duration": "02:45",
+      "fileSize": "14.2 MB",
+      "createdBy": "admin@tridiagonal.com",
+      "createdAt": "2026-08-25T07:15:19.190Z"
+    },
+    {
+      "id": "vid_demo_02",
+      "title": "Q3 Executive Strategy & Financial Briefing",
+      "storageKey": "executive_briefing.mp4",
+      "description": "Strictly confidential roadmap and financial targets for authorized stakeholders only.",
+      "duration": "04:12",
+      "fileSize": "22.8 MB",
+      "createdBy": "admin@tridiagonal.com",
+      "createdAt": "2026-08-25T07:15:19.190Z"
+    }
+  ],
+  "videoAccess": [
+    {
+      "id": "acc_1787642614251_qx6n5",
+      "videoId": "vid_demo_01",
+      "userEmail": "omkumar4138@gmail.com",
+      "accessTokenHash": "1837dceab0230e60a38b27158b88f9c9fa737be9349ef38cf7c1ec9e19cb4764",
+      "expiresAt": "2026-09-01T01:52:00.000Z",
+      "status": "active",
+      "maxViews": 2,
+      "viewCount": 1,
+      "registeredDeviceFingerprint": "fp_5e291696_dev_jas4",
+      "registeredDeviceInfo": {
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "screenResolution": "1440x900",
+        "boundAt": "2026-08-25T07:24:16.797Z"
+      },
+      "createdAt": "2026-08-25T07:23:34.251Z",
+      "lastAccessedAt": "2026-08-25T07:24:17.437Z"
+    }
+  ],
+  "accessLogs": [
+    {
+      "accessRecordId": "acc_1787642614251_qx6n5",
+      "videoId": "vid_demo_01",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "DEVICE_MISMATCH_BLOCKED",
+      "ipAddress": "::1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "deviceFingerprint": "fp_256e2f96_dev_3a7f",
+      "details": "Device mismatch! Token is registered to a different device (Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36).",
+      "id": "log_1787642759795_nlzv",
+      "timestamp": "2026-08-25T07:25:59.795Z"
+    },
+    {
+      "accessRecordId": "acc_1787642614251_qx6n5",
+      "videoId": "vid_demo_01",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "VIDEO_STREAM_ACCESSED",
+      "ipAddress": "::1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "deviceFingerprint": "fp_5e291696_dev_jas4",
+      "details": "Serving protected video stream bytes. View count incremented to 1",
+      "id": "log_1787642657437_qa5u",
+      "timestamp": "2026-08-25T07:24:17.437Z"
+    },
+    {
+      "accessRecordId": "acc_1787642614251_qx6n5",
+      "videoId": "vid_demo_01",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "DEVICE_BOUND",
+      "ipAddress": "::1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "deviceFingerprint": "fp_5e291696_dev_jas4",
+      "details": "Bound device fingerprint: fp_5e291696_dev_jas4",
+      "id": "log_1787642656797_4iet",
+      "timestamp": "2026-08-25T07:24:16.797Z"
+    },
+    {
+      "accessRecordId": "acc_1787642614251_qx6n5",
+      "videoId": "vid_demo_01",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "OTP_VERIFIED",
+      "ipAddress": "::1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "deviceFingerprint": "fp_5e291696_dev_jas4",
+      "details": "OTP successfully verified. Device registered and bound.",
+      "id": "log_1787642656797_kqy4",
+      "timestamp": "2026-08-25T07:24:16.797Z"
+    },
+    {
+      "accessRecordId": "acc_1787642614251_qx6n5",
+      "videoId": "vid_demo_01",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "OTP_SENT",
+      "ipAddress": "::1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "deviceFingerprint": "fp_5e291696_dev_jas4",
+      "details": "OTP generated and sent to omkumar4138@gmail.com",
+      "id": "log_1787642647428_jdte",
+      "timestamp": "2026-08-25T07:24:07.428Z"
+    },
+    {
+      "accessRecordId": "acc_1787642614251_qx6n5",
+      "videoId": "vid_demo_01",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "LINK_OPENED",
+      "ipAddress": "CMS Admin Panel",
+      "userAgent": "Admin Console",
+      "details": "Generated secure token link for omkumar4138@gmail.com",
+      "id": "log_1787642614252_c0bn",
+      "timestamp": "2026-08-25T07:23:34.252Z"
+    }
+  ],
+  "otps": []
+}
