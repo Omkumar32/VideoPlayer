@@ -42,11 +42,18 @@ export async function POST(req: NextRequest) {
     const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/+$/, '') || 'http://localhost:3000';
 
     for (const vId of selectedIds) {
-      const video = await dbStore.getVideoById(vId);
+      let video = await dbStore.getVideoById(vId);
+      // Fallback: if single video exists or vId mismatch, match against videos list
+      if (!video) {
+        const allVids = await dbStore.getVideos();
+        video = allVids.find((v: any) => v.id === vId || v._id?.toString() === vId) || allVids[0];
+      }
       if (!video) continue;
 
+      const targetVideoId = video.id || video._id?.toString() || vId;
+
       const { record, rawToken } = await dbStore.createAccessRecord({
-        videoId: vId,
+        videoId: targetVideoId,
         userEmail,
         expiresAt: new Date(expiresAt).toISOString(),
         maxViews: maxViews ? parseInt(maxViews, 10) : null,
