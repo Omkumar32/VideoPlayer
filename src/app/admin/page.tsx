@@ -116,7 +116,9 @@ export default function AdminPage() {
     setFormSuccess('');
     setGeneratedUrl('');
 
-    if (!selectedVideoId || !userEmailInput || !expirationInput) {
+    const targetVideoId = selectedVideoId || (videos.length > 0 ? (videos[0].id || (videos[0] as any)._id?.toString()) : '');
+
+    if (!targetVideoId || !userEmailInput || !expirationInput) {
       setFormError('Please select a video, enter a user email, and pick an expiration date.');
       return;
     }
@@ -126,7 +128,7 @@ export default function AdminPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          videoId: selectedVideoId,
+          videoId: targetVideoId,
           userEmail: userEmailInput,
           expiresAt: expirationInput,
           maxViews: maxViewsInput ? parseInt(maxViewsInput, 10) : null,
