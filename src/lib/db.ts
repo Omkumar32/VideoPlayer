@@ -86,7 +86,10 @@ export const AccessLogModel = mongoose.models.AccessLog || mongoose.model('Acces
 import fs from 'fs';
 import path from 'path';
 
-const DB_FILE_PATH = path.join(process.cwd(), 'data_store.json');
+const isServerless = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+const DB_FILE_PATH = isServerless 
+  ? path.join('/tmp', 'data_store.json') 
+  : path.join(process.cwd(), 'data_store.json');
 
 class Store {
   private getFileStore() {
@@ -96,6 +99,14 @@ class Store {
       }
     } catch (e) {}
     return { videos: [], videoAccess: [], accessLogs: [], otps: [] };
+  }
+
+  private saveFileStore(data: any) {
+    try {
+      fs.writeFileSync(DB_FILE_PATH, JSON.stringify(data, null, 2));
+    } catch (e) {
+      console.warn('File store save skipped on serverless:', (e as any).message);
+    }
   }
 
   // Dual MongoDB + Local Sync Methods
@@ -167,7 +178,7 @@ class Store {
       createdAt: new Date().toISOString(),
     };
     local.videos.unshift(newVideo);
-    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(local, null, 2));
+    this.saveFileStore(local);
     return newVideo;
   }
 
@@ -181,7 +192,7 @@ class Store {
     const idx = local.videos.findIndex((v: any) => v.id === id || (v as any)._id?.toString() === id);
     if (idx !== -1) {
       local.videos[idx] = { ...local.videos[idx], ...updates };
-      fs.writeFileSync(DB_FILE_PATH, JSON.stringify(local, null, 2));
+      this.saveFileStore(local);
     }
     return true;
   }
@@ -197,7 +208,7 @@ class Store {
     const local = this.getFileStore();
     local.videos = local.videos.filter((v: any) => v.id !== id && (v as any)._id?.toString() !== id);
     local.videoAccess = local.videoAccess.filter((a: any) => a.videoId !== id);
-    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(local, null, 2));
+    this.saveFileStore(local);
     return true;
   }
 
@@ -263,7 +274,7 @@ class Store {
       createdAt: new Date().toISOString(),
     };
     local.videoAccess.unshift(newRecord);
-    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(local, null, 2));
+    this.saveFileStore(local);
 
     return { record: newRecord, rawToken };
   }
@@ -278,7 +289,7 @@ class Store {
     const idx = local.videoAccess.findIndex((r: any) => r.id === id);
     if (idx !== -1) {
       local.videoAccess[idx] = { ...local.videoAccess[idx], ...updates };
-      fs.writeFileSync(DB_FILE_PATH, JSON.stringify(local, null, 2));
+      this.saveFileStore(local);
     }
   }
 
@@ -315,7 +326,7 @@ class Store {
       expiresAt: expiresAt.getTime(),
       attempts: 0,
     });
-    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(local, null, 2));
+    this.saveFileStore(local);
 
     return otpCode;
   }
@@ -339,7 +350,7 @@ class Store {
     if (rec.otpCode !== inputCode.trim()) return { success: false, message: 'Invalid code.' };
 
     local.otps = local.otps.filter((o: any) => o.accessRecordId !== accessRecordId);
-    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(local, null, 2));
+    this.saveFileStore(local);
     return { success: true, message: 'OTP verified.' };
   }
 
@@ -368,7 +379,7 @@ class Store {
       ...log,
       timestamp: new Date().toISOString(),
     });
-    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(local, null, 2));
+    this.saveFileStore(local);
   }
 
   public async getLogs(limit = 50) {
