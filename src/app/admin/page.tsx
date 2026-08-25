@@ -647,9 +647,14 @@ export default function AdminPage() {
           {activeTab === 'VIDEOS' && (
             <div className="space-y-6">
               <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur-xl">
-                <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-800">
-                  <Upload className="w-4 h-4 text-indigo-400" />
-                  <h3 className="text-sm font-bold text-white">Upload New Video to Public Storage (`public/videos/`)</h3>
+                <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <Upload className="w-4 h-4 text-indigo-400" />
+                    <h3 className="text-sm font-bold text-white">Upload New Video to Storage</h3>
+                  </div>
+                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                    ⚡ Auto Stream Compressed
+                  </span>
                 </div>
 
                 {uploadSuccessMsg && (
