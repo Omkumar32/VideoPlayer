@@ -91,6 +91,39 @@
   ],
   "accessLogs": [
     {
+      "id": "log_1787646503471",
+      "accessRecordId": "6a8d4ee52bce4b180999c95e",
+      "videoId": "6a8d4ece2bce4b180999c956",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "REVOKED_BLOCKED",
+      "ipAddress": "::1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "details": "Attempted to access a revoked link",
+      "timestamp": "2026-08-25T08:28:23.472Z"
+    },
+    {
+      "id": "log_1787646237755",
+      "accessRecordId": "6a8d4ee52bce4b180999c963",
+      "videoId": "6a8d4ebc2bce4b180999c94f",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "REVOKED_BLOCKED",
+      "ipAddress": "CMS Admin Panel",
+      "userAgent": "Admin Console",
+      "details": "Admin manually revoked link access.",
+      "timestamp": "2026-08-25T08:23:57.755Z"
+    },
+    {
+      "id": "log_1787646232250",
+      "accessRecordId": "6a8d4ee52bce4b180999c95e",
+      "videoId": "6a8d4ece2bce4b180999c956",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "REVOKED_BLOCKED",
+      "ipAddress": "CMS Admin Panel",
+      "userAgent": "Admin Console",
+      "details": "Admin manually revoked link access.",
+      "timestamp": "2026-08-25T08:23:52.250Z"
+    },
+    {
       "id": "log_1787645728679",
       "accessRecordId": "6a8d4ee52bce4b180999c95e",
       "videoId": "6a8d4ece2bce4b180999c956",

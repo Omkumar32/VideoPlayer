@@ -225,7 +225,7 @@ export default function AdminPage() {
           accessUrl: `${window.location.origin}${l.accessUrl}`,
         }));
         setGeneratedLinks(fullLinks);
-        setFormSuccess(`Successfully generated ${fullLinks.length} secure access link(s) for ${userEmailInput}!`);
+        setFormSuccess(`Generated link(s) & automatically dispatched email to ${userEmailInput}!`);
       }
       setUserEmailInput('');
       fetchData();

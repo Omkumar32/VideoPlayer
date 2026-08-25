@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbStore } from '@/lib/db';
+import { sendAccessEmail } from '@/lib/mailer';
 
 export async function GET() {
   const records = await dbStore.getAllAccessRecords();
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest) {
     }
 
     const createdLinks = [];
+    const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/+$/, '') || 'http://localhost:3000';
 
     for (const vId of selectedIds) {
       const video = await dbStore.getVideoById(vId);
@@ -50,6 +52,16 @@ export async function POST(req: NextRequest) {
         maxViews: maxViews ? parseInt(maxViews, 10) : null,
       });
 
+      const fullAccessUrl = `${origin}/watch/${rawToken}`;
+
+      // Automatically Dispatch Email to Target Recipient
+      await sendAccessEmail({
+        toEmail: record.userEmail,
+        videoTitle: video.title,
+        accessUrl: fullAccessUrl,
+        expiresAt: record.expiresAt,
+      });
+
       await dbStore.addLog({
         accessRecordId: record.id,
         videoId: video.id || video._id,
@@ -57,13 +69,14 @@ export async function POST(req: NextRequest) {
         event: 'LINK_OPENED',
         ipAddress: 'CMS Admin Panel',
         userAgent: 'Admin Console',
-        details: `Generated secure token link for video "${video.title}" assigned to ${record.userEmail}`,
+        details: `Generated secure token link & dispatched email to ${record.userEmail}`,
       });
 
       createdLinks.push({
         videoId: vId,
         videoTitle: video.title,
         accessUrl: `/watch/${rawToken}`,
+        fullAccessUrl,
         rawToken,
         record,
       });
@@ -75,6 +88,7 @@ export async function POST(req: NextRequest) {
       links: createdLinks,
       accessUrl: createdLinks[0]?.accessUrl,
       rawToken: createdLinks[0]?.rawToken,
+      message: `Generated link and automatically dispatched email to ${userEmail}!`,
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
