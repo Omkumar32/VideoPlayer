@@ -54,13 +54,17 @@ export async function POST(req: NextRequest) {
 
       const fullAccessUrl = `${origin}/watch/${rawToken}`;
 
-      // Automatically Dispatch Email to Target Recipient
-      await sendAccessEmail({
-        toEmail: record.userEmail,
-        videoTitle: video.title,
-        accessUrl: fullAccessUrl,
-        expiresAt: record.expiresAt,
-      });
+      // Automatically Dispatch Email to Target Recipient (Non-blocking)
+      try {
+        await sendAccessEmail({
+          toEmail: record.userEmail,
+          videoTitle: video.title,
+          accessUrl: fullAccessUrl,
+          expiresAt: record.expiresAt,
+        });
+      } catch (mailErr) {
+        console.warn('Mail dispatch skipped or errored:', mailErr);
+      }
 
       await dbStore.addLog({
         accessRecordId: record.id,

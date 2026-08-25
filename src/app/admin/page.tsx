@@ -196,8 +196,17 @@ export default function AdminPage() {
       ? selectedVideoIds 
       : (videos.length > 0 ? [videos[0].id || (videos[0] as any)._id?.toString()] : []);
 
-    if (targetIds.length === 0 || !userEmailInput || !expirationInput) {
-      setFormError('Please select at least one video, enter a user email, and pick an expiration date.');
+    if (!userEmailInput || userEmailInput.trim() === '') {
+      const msg = 'Please enter an Authorized Prospect / User Email address (e.g. rahul@gmail.com).';
+      setFormError(msg);
+      alert(msg);
+      return;
+    }
+
+    if (targetIds.length === 0 || !expirationInput) {
+      const msg = 'Please select at least one video and pick an expiration date.';
+      setFormError(msg);
+      alert(msg);
       return;
     }
 
