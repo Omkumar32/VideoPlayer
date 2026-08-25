@@ -788,19 +788,22 @@ export default function AdminPage() {
                 <span className="text-xs text-slate-400">Real-time access events</span>
               </div>
               <div className="divide-y divide-slate-800/60 max-h-[500px] overflow-y-auto font-mono text-xs">
-                {logs.map((log) => (
-                  <div key={log.id} className="p-3 hover:bg-slate-800/40 transition">
-                    <div className="flex items-center justify-between text-slate-400 mb-1 text-[11px]">
-                      <span className="text-indigo-400 font-semibold">{log.event}</span>
-                      <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
+                {logs.map((log: any, idx: number) => {
+                  const logKey = log.id || log._id?.toString() || `log_${idx}_${log.timestamp}`;
+                  return (
+                    <div key={logKey} className="p-3 hover:bg-slate-800/40 transition">
+                      <div className="flex items-center justify-between text-slate-400 mb-1 text-[11px]">
+                        <span className="text-indigo-400 font-semibold">{log.event}</span>
+                        <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
+                      </div>
+                      <div className="text-slate-200">{log.details}</div>
+                      <div className="text-[10px] text-slate-500 mt-1 flex items-center gap-3">
+                        <span>User: {log.userEmail}</span>
+                        <span>IP: {log.ipAddress}</span>
+                      </div>
                     </div>
-                    <div className="text-slate-200">{log.details}</div>
-                    <div className="text-[10px] text-slate-500 mt-1 flex items-center gap-3">
-                      <span>User: {log.userEmail}</span>
-                      <span>IP: {log.ipAddress}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
