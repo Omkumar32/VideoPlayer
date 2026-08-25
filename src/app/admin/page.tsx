@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Video, Plus, Link as LinkIcon, Mail, Calendar, Eye, Shield, Lock, Copy, Check,
-  RotateCcw, Ban, Activity, RefreshCw, Smartphone, KeyRound, ExternalLink, Play, CheckCircle2, UserCheck
+  RotateCcw, Ban, Activity, RefreshCw, Smartphone, KeyRound, ExternalLink, Play, CheckCircle2,
+  Upload, FileVideo, CheckSquare, Square
 } from 'lucide-react';
 
 interface SecureVideo {
@@ -55,20 +56,24 @@ export default function AdminPage() {
   const [logs, setLogs] = useState<AccessLog[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Form State: Generate Link
-  const [selectedVideoId, setSelectedVideoId] = useState('');
+  // Form State: Generate Link (Supports Multi-Select Video IDs)
+  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [userEmailInput, setUserEmailInput] = useState('');
   const [expirationInput, setExpirationInput] = useState('');
   const [maxViewsInput, setMaxViewsInput] = useState('');
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
-  const [generatedUrl, setGeneratedUrl] = useState('');
-  const [copiedUrl, setCopiedUrl] = useState(false);
+  const [generatedLinks, setGeneratedLinks] = useState<{ videoTitle: string; accessUrl: string }[]>([]);
+  const [copiedUrlIndex, setCopiedUrlIndex] = useState<number | null>(null);
 
-  // Form State: Add Video
+  // Form State: Add / Upload Video
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
-  const [newStorageKey, setNewStorageKey] = useState('sample_product_training.mp4');
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [presetStorageKey, setPresetStorageKey] = useState('sample_product_training.mp4');
+  const [uploading, setUploading] = useState(false);
+  const [uploadSuccessMsg, setUploadSuccessMsg] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load Data
   const fetchData = async () => {
@@ -86,9 +91,9 @@ export default function AdminPage() {
 
       if (vData.videos) {
         setVideos(vData.videos);
-        if (vData.videos.length > 0 && !selectedVideoId) {
+        if (vData.videos.length > 0 && selectedVideoIds.length === 0) {
           const first = vData.videos[0];
-          setSelectedVideoId(first.id || first._id?.toString() || '');
+          setSelectedVideoIds([first.id || first._id?.toString() || '']);
         }
       }
       if (aData.records) setAccessRecords(aData.records);
@@ -109,17 +114,35 @@ export default function AdminPage() {
     setExpirationInput(d.toISOString().slice(0, 16));
   }, []);
 
-  // Handle Generate Link
+  // Multi-Select Video Toggle Handler
+  const toggleVideoSelection = (id: string) => {
+    if (selectedVideoIds.includes(id)) {
+      if (selectedVideoIds.length > 1) {
+        setSelectedVideoIds(selectedVideoIds.filter((vId) => vId !== id));
+      }
+    } else {
+      setSelectedVideoIds([...selectedVideoIds, id]);
+    }
+  };
+
+  const selectAllVideos = () => {
+    const allIds = videos.map((v: any) => v.id || v._id?.toString());
+    setSelectedVideoIds(allIds);
+  };
+
+  // Handle Generate Link for Selected Videos
   const handleGenerateLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
     setFormSuccess('');
-    setGeneratedUrl('');
+    setGeneratedLinks([]);
 
-    const targetVideoId = selectedVideoId || (videos.length > 0 ? (videos[0].id || (videos[0] as any)._id?.toString()) : '');
+    const targetIds = selectedVideoIds.length > 0 
+      ? selectedVideoIds 
+      : (videos.length > 0 ? [videos[0].id || (videos[0] as any)._id?.toString()] : []);
 
-    if (!targetVideoId || !userEmailInput || !expirationInput) {
-      setFormError('Please select a video, enter a user email, and pick an expiration date.');
+    if (targetIds.length === 0 || !userEmailInput || !expirationInput) {
+      setFormError('Please select at least one video, enter a user email, and pick an expiration date.');
       return;
     }
 
@@ -128,7 +151,7 @@ export default function AdminPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          videoId: targetVideoId,
+          videoIds: targetIds,
           userEmail: userEmailInput,
           expiresAt: expirationInput,
           maxViews: maxViewsInput ? parseInt(maxViewsInput, 10) : null,
@@ -141,37 +164,64 @@ export default function AdminPage() {
         return;
       }
 
-      const fullUrl = `${window.location.origin}${data.accessUrl}`;
-      setGeneratedUrl(fullUrl);
-      setFormSuccess(`Secure access link created for ${userEmailInput}`);
+      if (data.links && data.links.length > 0) {
+        const fullLinks = data.links.map((l: any) => ({
+          videoTitle: l.videoTitle,
+          accessUrl: `${window.location.origin}${l.accessUrl}`,
+        }));
+        setGeneratedLinks(fullLinks);
+        setFormSuccess(`Successfully generated ${fullLinks.length} secure access link(s) for ${userEmailInput}!`);
+      }
       setUserEmailInput('');
       fetchData();
     } catch (err: any) {
-      setFormError('Error generating link.');
+      setFormError('Error generating secure link.');
     }
   };
 
-  // Handle Add Video
+  // Handle Upload / Create Video
   const handleAddVideo = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle || !newStorageKey) return;
+    if (!newTitle) {
+      alert('Please enter a video title');
+      return;
+    }
+
+    setUploading(true);
+    setUploadSuccessMsg('');
+
     try {
+      const formData = new FormData();
+      formData.append('title', newTitle);
+      formData.append('description', newDesc);
+
+      if (uploadFile) {
+        formData.append('file', uploadFile);
+      } else {
+        formData.append('storageKey', presetStorageKey);
+      }
+
       const res = await fetch('/api/admin/videos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: newTitle,
-          description: newDesc,
-          storageKey: newStorageKey,
-        }),
+        body: formData,
       });
+
+      const data = await res.json();
       if (res.ok) {
         setNewTitle('');
         setNewDesc('');
+        setUploadFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        setUploadSuccessMsg(`Video "${data.video.title}" uploaded and stored in public/videos!`);
         fetchData();
+      } else {
+        alert(data.error || 'Failed to upload video');
       }
     } catch (e) {
-      console.error('Failed to add video', e);
+      console.error('Failed to upload video', e);
+      alert('Upload failed.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -194,10 +244,10 @@ export default function AdminPage() {
     }
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
-    setCopiedUrl(true);
-    setTimeout(() => setCopiedUrl(false), 2000);
+    setCopiedUrlIndex(index);
+    setTimeout(() => setCopiedUrlIndex(null), 2000);
   };
 
   return (
@@ -209,7 +259,7 @@ export default function AdminPage() {
             <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-full text-xs font-semibold font-mono">
               Solution 2 Engine
             </span>
-            <span className="text-xs text-slate-500">SHA-256 Token Hashing & Device Binding</span>
+            <span className="text-xs text-slate-500">SHA-256 Hashing & Device Binding</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
             Secure Video CMS Admin
@@ -228,16 +278,16 @@ export default function AdminPage() {
       </header>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Generator Form (4 cols) */}
-        <div className="lg:col-span-4 space-y-6">
+        {/* Left Column: Generator Form with Multi-Video Select (5 cols) */}
+        <div className="lg:col-span-5 space-y-6">
           <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur-xl">
             <div className="flex items-center gap-2 mb-5 pb-3 border-b border-slate-800">
               <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
                 <LinkIcon className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-white">Generate Secure Video Access Link</h2>
-                <p className="text-xs text-slate-400">Assign confidential video link to target email</p>
+                <h2 className="text-base font-bold text-white">Generate Secure Video Links</h2>
+                <p className="text-xs text-slate-400">Select one or multiple videos to assign</p>
               </div>
             </div>
 
@@ -255,27 +305,48 @@ export default function AdminPage() {
             )}
 
             <form onSubmit={handleGenerateLink} className="space-y-4">
+              {/* Multi-Select Video Checkbox List */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Select Confidential Video
-                </label>
-                <select
-                  value={selectedVideoId}
-                  onChange={(e) => setSelectedVideoId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
-                >
-                  <option value="" disabled className="bg-slate-900 text-slate-400">
-                    -- Select Confidential Video --
-                  </option>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-300">
+                    Select Confidential Videos (Multi-Select)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={selectAllVideos}
+                    className="text-[11px] text-indigo-400 hover:underline"
+                  >
+                    Select All
+                  </button>
+                </div>
+
+                <div className="max-h-48 overflow-y-auto space-y-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
                   {videos.map((v: any) => {
                     const val = v.id || v._id?.toString();
+                    const isSelected = selectedVideoIds.includes(val);
                     return (
-                      <option key={val} value={val} className="bg-slate-900 text-white">
-                        {v.title}
-                      </option>
+                      <div
+                        key={val}
+                        onClick={() => toggleVideoSelection(val)}
+                        className={`p-2.5 rounded-lg border text-xs cursor-pointer transition flex items-center justify-between ${
+                          isSelected
+                            ? 'bg-indigo-950/60 border-indigo-500/60 text-white'
+                            : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 truncate">
+                          {isSelected ? (
+                            <CheckSquare className="w-4 h-4 text-indigo-400 shrink-0" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-600 shrink-0" />
+                          )}
+                          <span className="truncate font-medium">{v.title}</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-500 shrink-0 ml-2">{v.fileSize || 'MP4'}</span>
+                      </div>
                     );
                   })}
-                </select>
+                </div>
               </div>
 
               <div>
@@ -329,40 +400,49 @@ export default function AdminPage() {
                 className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2"
               >
                 <Lock className="w-3.5 h-3.5" />
-                <span>Generate Secure Access Link</span>
+                <span>Generate {selectedVideoIds.length > 1 ? `${selectedVideoIds.length} Links` : 'Secure Access Link'}</span>
               </button>
             </form>
 
-            {generatedUrl && (
-              <div className="mt-5 p-4 rounded-xl bg-indigo-950/40 border border-indigo-500/30 space-y-2">
-                <div className="flex items-center justify-between text-xs text-indigo-300 font-semibold">
-                  <span>Generated Link Ready</span>
-                  <a
-                    href={generatedUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs text-indigo-400 hover:underline flex items-center gap-1"
-                  >
-                    <span>Open</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+            {/* Generated Links List Display */}
+            {generatedLinks.length > 0 && (
+              <div className="mt-5 p-4 rounded-xl bg-indigo-950/40 border border-indigo-500/30 space-y-3">
+                <div className="text-xs text-indigo-300 font-semibold flex items-center justify-between">
+                  <span>Generated Access Links ({generatedLinks.length})</span>
                 </div>
-                <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between font-mono text-[11px] text-slate-300 overflow-x-auto">
-                  <span className="truncate mr-2">{generatedUrl}</span>
-                  <button
-                    onClick={() => copyToClipboard(generatedUrl)}
-                    className="p-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white transition shrink-0"
-                  >
-                    {copiedUrl ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {generatedLinks.map((item, idx) => (
+                    <div key={idx} className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 space-y-1">
+                      <div className="text-[11px] font-semibold text-slate-200 truncate">{item.videoTitle}</div>
+                      <div className="flex items-center justify-between font-mono text-[10px] text-slate-400">
+                        <span className="truncate mr-2">{item.accessUrl}</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <a
+                            href={item.accessUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-indigo-400"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                          <button
+                            onClick={() => copyToClipboard(item.accessUrl, idx)}
+                            className="p-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white"
+                          >
+                            {copiedUrlIndex === idx ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Column: Tabbed Lists (8 cols) */}
-        <div className="lg:col-span-8 space-y-6">
+        {/* Right Column: Upload Panel & Tabbed Lists (7 cols) */}
+        <div className="lg:col-span-7 space-y-6">
           {/* Navigation Tabs */}
           <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
             <button
@@ -386,7 +466,7 @@ export default function AdminPage() {
               }`}
             >
               <Video className="w-3.5 h-3.5" />
-              <span>Video Library ({videos.length})</span>
+              <span>Upload & Video Library ({videos.length})</span>
             </button>
 
             <button
@@ -412,7 +492,7 @@ export default function AdminPage() {
 
               {accessRecords.length === 0 ? (
                 <div className="p-8 text-center text-slate-500 text-xs">
-                  No access links generated yet. Use the form on the left to create one.
+                  No access links generated yet. Select videos on the left to create one.
                 </div>
               ) : (
                 <div className="divide-y divide-slate-800/80 overflow-x-auto">
@@ -508,37 +588,51 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* TAB 2: VIDEOS */}
+          {/* TAB 2: UPLOAD & VIDEOS */}
           {activeTab === 'VIDEOS' && (
             <div className="space-y-6">
               <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur-xl">
-                <h3 className="text-sm font-bold text-white mb-4">Add Video Entry</h3>
-                <form onSubmit={handleAddVideo} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Video Title</label>
-                    <input
-                      type="text"
-                      required
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      placeholder="e.g. Sales Onboarding 2026"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-indigo-500"
-                    />
+                <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-800">
+                  <Upload className="w-4 h-4 text-indigo-400" />
+                  <h3 className="text-sm font-bold text-white">Upload New Video to Public Storage (`public/videos/`)</h3>
+                </div>
+
+                {uploadSuccessMsg && (
+                  <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{uploadSuccessMsg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleAddVideo} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Video Title</label>
+                      <input
+                        type="text"
+                        required
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
+                        placeholder="e.g. Sales Onboarding 2026"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">
+                        Upload Video MP4 File
+                      </label>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="video/mp4,video/*"
+                        onChange={(e) => setUploadFile(e.target.files ? e.target.files[0] : null)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer"
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">File Storage Key</label>
-                    <select
-                      value={newStorageKey}
-                      onChange={(e) => setNewStorageKey(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-indigo-500"
-                    >
-                      <option value="sample_product_training.mp4">sample_product_training.mp4 (14.2 MB)</option>
-                      <option value="executive_briefing.mp4">executive_briefing.mp4 (22.8 MB)</option>
-                    </select>
-                  </div>
-
-                  <div className="sm:col-span-2">
                     <label className="block text-xs font-medium text-slate-300 mb-1">Description</label>
                     <input
                       type="text"
@@ -551,30 +645,58 @@ export default function AdminPage() {
 
                   <button
                     type="submit"
-                    className="sm:col-span-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-4 rounded-xl text-xs transition shadow flex items-center justify-center gap-2"
+                    disabled={uploading}
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition shadow flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Save Video Entry</span>
+                    {uploading ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        <span>Upload Video to public/videos & Add Entry</span>
+                      </>
+                    )}
                   </button>
                 </form>
               </div>
 
+              {/* Video Assets List */}
               <div className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
-                <div className="p-4 border-b border-slate-800">
-                  <h3 className="text-sm font-bold text-white">Video Assets in Storage</h3>
+                <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-white">All Videos in Storage ({videos.length})</h3>
+                  <span className="text-xs text-slate-400">Stored in `public/videos/`</span>
                 </div>
                 <div className="divide-y divide-slate-800">
-                  {videos.map((v) => (
-                    <div key={v.id} className="p-4 flex items-center justify-between">
-                      <div>
-                        <div className="font-bold text-sm text-white">{v.title}</div>
-                        <div className="text-xs text-slate-400 mt-0.5">{v.description}</div>
-                        <div className="text-[11px] text-slate-500 font-mono mt-1">
-                          File: {v.storageKey} | Duration: {v.duration || 'N/A'} | Size: {v.fileSize || 'N/A'}
+                  {videos.map((v: any) => {
+                    const val = v.id || v._id?.toString();
+                    const isSelected = selectedVideoIds.includes(val);
+                    return (
+                      <div key={val} className="p-4 flex items-center justify-between hover:bg-slate-800/40 transition">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <FileVideo className="w-4 h-4 text-indigo-400 shrink-0" />
+                            <span className="font-bold text-sm text-white">{v.title}</span>
+                          </div>
+                          {v.description && <div className="text-xs text-slate-400 mt-1">{v.description}</div>}
+                          <div className="text-[11px] text-slate-500 font-mono mt-1">
+                            Storage Key: <span className="text-indigo-300">{v.storageKey}</span> | Duration: {v.duration || 'N/A'} | Size: {v.fileSize || 'N/A'}
+                          </div>
                         </div>
+
+                        <button
+                          onClick={() => toggleVideoSelection(val)}
+                          className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition flex items-center gap-1.5 ${
+                            isSelected
+                              ? 'bg-indigo-600 text-white border-indigo-500'
+                              : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                          }`}
+                        >
+                          {isSelected ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+                          <span>{isSelected ? 'Selected' : 'Select'}</span>
+                        </button>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

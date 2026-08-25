@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { writeFile } from 'fs/promises';
+import path from 'path';
+import fs from 'fs';
 import { dbStore } from '@/lib/db';
 
 export async function GET() {
@@ -8,23 +11,59 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { title, description, storageKey } = body;
+    const formData = await req.formData();
+    const title = formData.get('title') as string;
+    const description = (formData.get('description') as string) || '';
+    const file = formData.get('file') as File | null;
+    const existingStorageKey = formData.get('storageKey') as string | null;
 
-    if (!title || !storageKey) {
+    if (!title) {
       return NextResponse.json(
-        { success: false, error: 'Title and video file selection are required.' },
+        { success: false, error: 'Video title is required.' },
+        { status: 400 }
+      );
+    }
+
+    let finalStorageKey = existingStorageKey || '';
+    let fileSizeStr = '15.0 MB';
+
+    // If actual MP4 file is uploaded
+    if (file && file.size > 0) {
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      // Clean filename
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filename = `${Date.now()}_${safeName}`;
+      
+      const videosDir = path.join(process.cwd(), 'public', 'videos');
+      if (!fs.existsSync(videosDir)) {
+        fs.mkdirSync(videosDir, { recursive: true });
+      }
+
+      const filePath = path.join(videosDir, filename);
+      await writeFile(filePath, buffer);
+      finalStorageKey = filename;
+
+      // Format size
+      const mb = (file.size / (1024 * 1024)).toFixed(1);
+      fileSizeStr = `${mb} MB`;
+    }
+
+    if (!finalStorageKey) {
+      return NextResponse.json(
+        { success: false, error: 'Please upload a video file or select a sample file.' },
         { status: 400 }
       );
     }
 
     const video = await dbStore.addVideo({
       title,
-      description: description || '',
-      storageKey,
+      description,
+      storageKey: finalStorageKey,
       createdBy: 'admin@tridiagonal.com',
-      duration: '03:15',
-      fileSize: '18.5 MB',
+      duration: '03:30',
+      fileSize: fileSizeStr,
     });
 
     return NextResponse.json({ success: true, video });

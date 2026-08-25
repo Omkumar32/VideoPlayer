@@ -23,48 +23,58 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { videoId, userEmail, expiresAt, maxViews } = body;
+    const { videoId, videoIds, userEmail, expiresAt, maxViews } = body;
 
-    if (!videoId || !userEmail || !expiresAt) {
+    // Support single videoId or array of videoIds
+    const selectedIds: string[] = Array.isArray(videoIds) && videoIds.length > 0 
+      ? videoIds 
+      : (videoId ? [videoId] : []);
+
+    if (selectedIds.length === 0 || !userEmail || !expiresAt) {
       return NextResponse.json(
-        { success: false, error: 'Video, User Email, and Expiration Date are required.' },
+        { success: false, error: 'At least one Video, User Email, and Expiration Date are required.' },
         { status: 400 }
       );
     }
 
-    const video = await dbStore.getVideoById(videoId);
-    if (!video) {
-      return NextResponse.json({ success: false, error: 'Video not found.' }, { status: 404 });
+    const createdLinks = [];
+
+    for (const vId of selectedIds) {
+      const video = await dbStore.getVideoById(vId);
+      if (!video) continue;
+
+      const { record, rawToken } = await dbStore.createAccessRecord({
+        videoId: vId,
+        userEmail,
+        expiresAt: new Date(expiresAt).toISOString(),
+        maxViews: maxViews ? parseInt(maxViews, 10) : null,
+      });
+
+      await dbStore.addLog({
+        accessRecordId: record.id,
+        videoId: video.id || video._id,
+        userEmail: record.userEmail,
+        event: 'LINK_OPENED',
+        ipAddress: 'CMS Admin Panel',
+        userAgent: 'Admin Console',
+        details: `Generated secure token link for video "${video.title}" assigned to ${record.userEmail}`,
+      });
+
+      createdLinks.push({
+        videoId: vId,
+        videoTitle: video.title,
+        accessUrl: `/watch/${rawToken}`,
+        rawToken,
+        record,
+      });
     }
-
-    const { record, rawToken } = await dbStore.createAccessRecord({
-      videoId,
-      userEmail,
-      expiresAt: new Date(expiresAt).toISOString(),
-      maxViews: maxViews ? parseInt(maxViews, 10) : null,
-    });
-
-    // Log creation
-    await dbStore.addLog({
-      accessRecordId: record.id,
-      videoId: video.id || video._id,
-      userEmail: record.userEmail,
-      event: 'LINK_OPENED',
-      ipAddress: 'CMS Admin Panel',
-      userAgent: 'Admin Console',
-      details: `Generated secure token link for ${record.userEmail}`,
-    });
-
-    const accessUrl = `/watch/${rawToken}`;
 
     return NextResponse.json({
       success: true,
-      record: {
-        ...record,
-        videoTitle: video.title,
-      },
-      rawToken,
-      accessUrl,
+      count: createdLinks.length,
+      links: createdLinks,
+      accessUrl: createdLinks[0]?.accessUrl,
+      rawToken: createdLinks[0]?.rawToken,
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
