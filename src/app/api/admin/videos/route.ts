@@ -36,17 +36,20 @@ export async function POST(req: NextRequest) {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const filename = `${Date.now()}_${safeName}`;
       
-      // Determine writable directory (/tmp/videos for Vercel Serverless, public/videos for local)
-      let targetDir = path.join(process.cwd(), 'public', 'videos');
-      try {
-        if (!fs.existsSync(targetDir)) {
+      // Vercel serverless functions have a read-only filesystem except /tmp
+      const isServerless = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+      let targetDir = isServerless 
+        ? path.join('/tmp', 'videos') 
+        : path.join(process.cwd(), 'public', 'videos');
+
+      if (!fs.existsSync(targetDir)) {
+        try {
           fs.mkdirSync(targetDir, { recursive: true });
-        }
-      } catch (err) {
-        // Fallback to writable /tmp on serverless environments like Vercel
-        targetDir = path.join('/tmp', 'videos');
-        if (!fs.existsSync(targetDir)) {
-          fs.mkdirSync(targetDir, { recursive: true });
+        } catch (e) {
+          targetDir = path.join('/tmp', 'videos');
+          if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+          }
         }
       }
 
