@@ -71,3 +71,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, title, description, storageKey } = body;
+
+    if (!id || !title) {
+      return NextResponse.json({ success: false, error: 'Video ID and Title required.' }, { status: 400 });
+    }
+
+    await dbStore.updateVideo(id, { title, description, storageKey });
+    return NextResponse.json({ success: true, message: 'Video updated successfully.' });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Video ID required.' }, { status: 400 });
+    }
+
+    await dbStore.deleteVideo(id);
+    return NextResponse.json({ success: true, message: 'Video deleted successfully.' });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}

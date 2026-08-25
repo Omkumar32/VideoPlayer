@@ -171,6 +171,36 @@ class Store {
     return newVideo;
   }
 
+  public async updateVideo(id: string, updates: { title?: string; description?: string; storageKey?: string }) {
+    try {
+      await connectToDatabase();
+      await VideoModel.findByIdAndUpdate(id, updates);
+    } catch (e) {}
+
+    const local = this.getFileStore();
+    const idx = local.videos.findIndex((v: any) => v.id === id || (v as any)._id?.toString() === id);
+    if (idx !== -1) {
+      local.videos[idx] = { ...local.videos[idx], ...updates };
+      fs.writeFileSync(DB_FILE_PATH, JSON.stringify(local, null, 2));
+    }
+    return true;
+  }
+
+  public async deleteVideo(id: string) {
+    try {
+      await connectToDatabase();
+      await VideoModel.findByIdAndDelete(id);
+      // Delete access records for this video
+      await VideoAccessModel.deleteMany({ videoId: id });
+    } catch (e) {}
+
+    const local = this.getFileStore();
+    local.videos = local.videos.filter((v: any) => v.id !== id && (v as any)._id?.toString() !== id);
+    local.videoAccess = local.videoAccess.filter((a: any) => a.videoId !== id);
+    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(local, null, 2));
+    return true;
+  }
+
   public async getAllAccessRecords() {
     try {
       await connectToDatabase();

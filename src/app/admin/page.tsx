@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Video, Plus, Link as LinkIcon, Mail, Calendar, Eye, Shield, Lock, Copy, Check,
   RotateCcw, Ban, Activity, RefreshCw, Smartphone, KeyRound, ExternalLink, Play, CheckCircle2,
-  Upload, FileVideo, CheckSquare, Square
+  Upload, FileVideo, CheckSquare, Square, Edit2, Trash2, X
 } from 'lucide-react';
 
 interface SecureVideo {
@@ -66,7 +66,7 @@ export default function AdminPage() {
   const [generatedLinks, setGeneratedLinks] = useState<{ videoTitle: string; accessUrl: string }[]>([]);
   const [copiedUrlIndex, setCopiedUrlIndex] = useState<number | null>(null);
 
-  // Form State: Add / Upload Video
+  // Form State: Add / Upload / Edit Video
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -74,6 +74,61 @@ export default function AdminPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadSuccessMsg, setUploadSuccessMsg] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Edit Video Modal State
+  const [editingVideo, setEditingVideo] = useState<any | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editStorageKey, setEditStorageKey] = useState('');
+
+  // Handle Edit Video Save
+  const handleUpdateVideo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingVideo || !editTitle) return;
+
+    try {
+      const id = editingVideo.id || editingVideo._id?.toString();
+      const res = await fetch('/api/admin/videos', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          title: editTitle,
+          description: editDesc,
+          storageKey: editStorageKey,
+        }),
+      });
+
+      if (res.ok) {
+        setEditingVideo(null);
+        fetchData();
+      } else {
+        alert('Failed to update video.');
+      }
+    } catch (e) {
+      alert('Error updating video.');
+    }
+  };
+
+  // Handle Delete Video
+  const handleDeleteVideo = async (id: string, title: string) => {
+    if (!confirm(`Are you sure you want to delete "${title}"? This will also remove any active access links for this video.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/videos?id=${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        fetchData();
+      } else {
+        alert('Failed to delete video.');
+      }
+    } catch (e) {
+      alert('Error deleting video.');
+    }
+  };
 
   // Load Data
   const fetchData = async () => {
@@ -683,17 +738,40 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => toggleVideoSelection(val)}
-                          className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition flex items-center gap-1.5 ${
-                            isSelected
-                              ? 'bg-indigo-600 text-white border-indigo-500'
-                              : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
-                          }`}
-                        >
-                          {isSelected ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
-                          <span>{isSelected ? 'Selected' : 'Select'}</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingVideo(v);
+                              setEditTitle(v.title);
+                              setEditDesc(v.description || '');
+                              setEditStorageKey(v.storageKey || '');
+                            }}
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700"
+                            title="Edit Video Details"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            onClick={() => handleDeleteVideo(val, v.title)}
+                            className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition"
+                            title="Delete Video"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            onClick={() => toggleVideoSelection(val)}
+                            className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition flex items-center gap-1.5 ${
+                              isSelected
+                                ? 'bg-indigo-600 text-white border-indigo-500'
+                                : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                            }`}
+                          >
+                            {isSelected ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+                            <span>{isSelected ? 'Selected' : 'Select'}</span>
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -728,6 +806,76 @@ export default function AdminPage() {
           )}
         </div>
       </div>
+
+      {/* Edit Video Modal */}
+      {editingVideo && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-indigo-400" />
+                Edit Video Entry
+              </h3>
+              <button
+                onClick={() => setEditingVideo(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateVideo} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Video Title</label>
+                <input
+                  type="text"
+                  required
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Storage Key / MP4 File Path</label>
+                <input
+                  type="text"
+                  required
+                  value={editStorageKey}
+                  onChange={(e) => setEditStorageKey(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Description</label>
+                <input
+                  type="text"
+                  value={editDesc}
+                  onChange={(e) => setEditDesc(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingVideo(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

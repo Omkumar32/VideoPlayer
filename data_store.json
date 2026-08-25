@@ -1,6 +1,26 @@
 {
   "videos": [
     {
+      "id": "vid_1787645646944_8sskq",
+      "title": "test2",
+      "description": "jjjf",
+      "storageKey": "1787645646888_sample-5s-720p.mp4",
+      "createdBy": "admin@tridiagonal.com",
+      "duration": "03:30",
+      "fileSize": "2.5 MB",
+      "createdAt": "2026-08-25T08:14:06.944Z"
+    },
+    {
+      "id": "vid_1787645628130_9uwtd",
+      "title": "test1",
+      "description": "testing",
+      "storageKey": "1787645628048_sample-5s.mp4",
+      "createdBy": "admin@tridiagonal.com",
+      "duration": "03:30",
+      "fileSize": "2.7 MB",
+      "createdAt": "2026-08-25T08:13:48.130Z"
+    },
+    {
       "id": "vid_demo_01",
       "title": "Tridiagonal Enterprise Platform Product Demo",
       "storageKey": "sample_product_training.mp4",
@@ -23,12 +43,40 @@
   ],
   "videoAccess": [
     {
+      "id": "acc_1787645669533_p70u3",
+      "videoId": "6a8d4ebc2bce4b180999c94f",
+      "userEmail": "omkumar4138@gmail.com",
+      "accessTokenHash": "a8de72c02e2b8233159b72ea8dd19bf9182fe74d59b133181523b7a3d5b36617",
+      "expiresAt": "2026-09-01T02:40:00.000Z",
+      "status": "active",
+      "maxViews": 1,
+      "viewCount": 0,
+      "registeredDeviceFingerprint": null,
+      "registeredDeviceInfo": null,
+      "createdAt": "2026-08-25T08:14:29.533Z",
+      "lastAccessedAt": null
+    },
+    {
+      "id": "acc_1787645669362_w0dll",
+      "videoId": "6a8d4ece2bce4b180999c956",
+      "userEmail": "omkumar4138@gmail.com",
+      "accessTokenHash": "895afd165b66c1b3ca1df79d3c8f8f8504587813b623df30e94a97fc39d8790c",
+      "expiresAt": "2026-09-01T02:40:00.000Z",
+      "status": "active",
+      "maxViews": 1,
+      "viewCount": 0,
+      "registeredDeviceFingerprint": null,
+      "registeredDeviceInfo": null,
+      "createdAt": "2026-08-25T08:14:29.362Z",
+      "lastAccessedAt": null
+    },
+    {
       "id": "acc_1787642614251_qx6n5",
       "videoId": "vid_demo_01",
       "userEmail": "omkumar4138@gmail.com",
       "accessTokenHash": "1837dceab0230e60a38b27158b88f9c9fa737be9349ef38cf7c1ec9e19cb4764",
       "expiresAt": "2026-09-01T01:52:00.000Z",
-      "status": "active",
+      "status": "revoked",
       "maxViews": 2,
       "viewCount": 1,
       "registeredDeviceFingerprint": "fp_5e291696_dev_jas4",
@@ -42,6 +90,87 @@
     }
   ],
   "accessLogs": [
+    {
+      "id": "log_1787645728679",
+      "accessRecordId": "6a8d4ee52bce4b180999c95e",
+      "videoId": "6a8d4ece2bce4b180999c956",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "VIDEO_STREAM_ACCESSED",
+      "ipAddress": "::1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "deviceFingerprint": "fp_1a0583f1_dev_51xm",
+      "details": "Serving protected video stream bytes. View count incremented to 1",
+      "timestamp": "2026-08-25T08:15:28.679Z"
+    },
+    {
+      "id": "log_1787645727489",
+      "accessRecordId": "6a8d4ee52bce4b180999c95e",
+      "videoId": "6a8d4ece2bce4b180999c956",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "DEVICE_BOUND",
+      "ipAddress": "::1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "deviceFingerprint": "fp_1a0583f1_dev_51xm",
+      "details": "Bound device fingerprint: fp_1a0583f1_dev_51xm",
+      "timestamp": "2026-08-25T08:15:27.489Z"
+    },
+    {
+      "id": "log_1787645727426",
+      "accessRecordId": "6a8d4ee52bce4b180999c95e",
+      "videoId": "6a8d4ece2bce4b180999c956",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "OTP_VERIFIED",
+      "ipAddress": "::1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "deviceFingerprint": "fp_1a0583f1_dev_51xm",
+      "details": "OTP successfully verified. Device registered and bound.",
+      "timestamp": "2026-08-25T08:15:27.426Z"
+    },
+    {
+      "id": "log_1787645719986",
+      "accessRecordId": "6a8d4ee52bce4b180999c95e",
+      "videoId": "6a8d4ece2bce4b180999c956",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "OTP_SENT",
+      "ipAddress": "::1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "deviceFingerprint": "fp_1a0583f1_dev_51xm",
+      "details": "OTP generated and sent to omkumar4138@gmail.com",
+      "timestamp": "2026-08-25T08:15:19.986Z"
+    },
+    {
+      "id": "log_1787645669592",
+      "accessRecordId": "acc_1787645669533_p70u3",
+      "videoId": "6a8d4ebc2bce4b180999c94f",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "LINK_OPENED",
+      "ipAddress": "CMS Admin Panel",
+      "userAgent": "Admin Console",
+      "details": "Generated secure token link for video \"test1\" assigned to omkumar4138@gmail.com",
+      "timestamp": "2026-08-25T08:14:29.592Z"
+    },
+    {
+      "id": "log_1787645669420",
+      "accessRecordId": "acc_1787645669362_w0dll",
+      "videoId": "6a8d4ece2bce4b180999c956",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "LINK_OPENED",
+      "ipAddress": "CMS Admin Panel",
+      "userAgent": "Admin Console",
+      "details": "Generated secure token link for video \"test2\" assigned to omkumar4138@gmail.com",
+      "timestamp": "2026-08-25T08:14:29.420Z"
+    },
+    {
+      "id": "log_1787645445542",
+      "accessRecordId": "acc_1787642614251_qx6n5",
+      "videoId": "vid_demo_01",
+      "userEmail": "omkumar4138@gmail.com",
+      "event": "REVOKED_BLOCKED",
+      "ipAddress": "CMS Admin Panel",
+      "userAgent": "Admin Console",
+      "details": "Admin manually revoked link access.",
+      "timestamp": "2026-08-25T08:10:45.542Z"
+    },
     {
       "accessRecordId": "acc_1787642614251_qx6n5",
       "videoId": "vid_demo_01",
